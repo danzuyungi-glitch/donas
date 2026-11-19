@@ -45,14 +45,27 @@ const app = express();
 
 // Webhook: TANPA API_KEY (Saweria nggak bisa kirim header custom), diamankan signature stream key
 const verifySignature = createMiddleware(STREAM_KEY, { camelCase: true });
-app.post("/webhook", express.json(), verifySignature, (req, res) => {
+let lastWebhookAt = null;
+let webhookHits = 0;
+app.post(
+  "/webhook",
+  (req, res, next) => {
+    webhookHits++;
+    console.log(`[WEBHOOK] Request masuk (signature: ${req.get("Saweria-Callback-Signature") ? "ada" : "TIDAK ADA"})`);
+    next();
+  },
+  express.json(),
+  verifySignature,
+  (req, res) => {
+  lastWebhookAt = Date.now();
   try {
     if (req.body.type === "donation") addDonation(req.body);
   } catch (e) {
     console.error("[WEBHOOK ERROR]", e.message);
   }
   res.sendStatus(200);
-});
+  }
+);
 
 // Proteksi endpoint lain pakai API_KEY
 if (!API_KEY) console.warn("[API] PERINGATAN: API_KEY belum diisi, endpoint terbuka untuk publik!");
@@ -70,6 +83,8 @@ app.get("/health", (req, res) => {
 app.get("/status", (req, res) => {
   res.json({
     mode: "webhook",
+    webhookHits,
+    webhookTerakhir: lastWebhookAt ? new Date(lastWebhookAt).toISOString() : null,
     totalDonasi: donations.length,
     donasiTerakhir: lastDonationAt ? new Date(lastDonationAt).toISOString() : null,
     uptimeSec: Math.round(process.uptime()),
