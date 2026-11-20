@@ -1,11 +1,12 @@
 {
   "name": "saweria-watcher-service",
-  "version": "2.0.0",
-  "description": "Penerima webhook Saweria + API buat dipoll bot WA",
+  "version": "2.1.0",
+  "description": "Penerima webhook Saweria + API buat dipoll bot WA + simpan donasi ke Firebase",
   "main": "server.js",
   "scripts": { "start": "node server.js" },
   "dependencies": {
     "express": "^4.19.2",
+    "firebase-admin": "^12.7.0",
     "saweria-webhook-express": "^1.0.0"
   }
 }
